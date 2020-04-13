@@ -8,6 +8,8 @@ type Overseer interface {
 	Introduction() string
 	//Train init given workers
 	Train(workers []*Worker) error
+	//Muted is overseer muted.
+	Muted() bool
 	//Evaluate evaluate given worker.
 	//Return data and any error if raised
 	Evaluate(*Worker) (interface{}, error)
@@ -46,6 +48,7 @@ type PlainOverseer struct {
 	id               string
 	team             string
 	introduction     string
+	muted            bool
 	init             func() error
 	train            func(workers []*Worker) error
 	evaluate         func(*Worker) (interface{}, error)
@@ -68,10 +71,22 @@ func (o *PlainOverseer) Introduction() string {
 	return o.introduction
 }
 
-//WithIntroduction set introduction.
+//WithIntroduction set overseer introduction.
 //Reutrn overseer itself.
 func (o *PlainOverseer) WithIntroduction(intro string) *PlainOverseer {
 	o.introduction = intro
+	return o
+}
+
+//Muted is overseer muted
+func (o *PlainOverseer) Muted() bool {
+	return o.muted
+}
+
+//WithMuted set over muted
+//Return overseer itself.
+func (o *PlainOverseer) WithMuted(muted bool) *PlainOverseer {
+	o.muted = muted
 	return o
 }
 
