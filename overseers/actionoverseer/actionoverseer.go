@@ -10,43 +10,8 @@ import (
 //Team overseer team
 var Team = reflect.ValueOf(action.New()).Type().String()
 
-//Overseer overseer struct
-type Overseer struct {
-}
-
-//Team overseer team
-func (o *Overseer) Team() string {
-	return Team
-}
-
-//Train init given workers
-func (o *Overseer) Train(workers []*worker.Worker) error {
-	return nil
-}
-
-//Evaluate evaluate given worker.
-//Return data and any error if raised
-func (o *Overseer) Evaluate(w *worker.Worker) (interface{}, error) {
-	return nil, nil
-}
-
-//EvaluationReport create evaluation report by given worker .
-//Return plain report and any error if raised
-func (o *Overseer) EvaluationReport(w *worker.Worker) (string, error) {
-	return "", nil
-}
-
-//ID overseer id.
-func (o *Overseer) ID() string {
-	return "action"
-}
-
-//Introduction overseer introduction.
-func (o *Overseer) Introduction() string {
-	return "http action workers"
-}
-
 //New create new overseer.
-func New() *Overseer {
-	return &Overseer{}
+func New() *worker.PlainOverseer {
+	return worker.NewOrverseer("action", Team).
+		WithIntroduction("http action workers")
 }
