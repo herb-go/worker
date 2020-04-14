@@ -1,5 +1,9 @@
 package worker
 
+import (
+	"reflect"
+)
+
 //Overseer overseet interface
 type Overseer interface {
 	//Team overseer team
@@ -154,10 +158,10 @@ func (o *PlainOverseer) WithCommandFunc(f func(worker *Worker, cmd string) (inte
 }
 
 //NewOrverseer create new overseer with given id and team
-func NewOrverseer(id string, team string) *PlainOverseer {
+func NewOrverseer(id string, v interface{}) *PlainOverseer {
 	return &PlainOverseer{
 		id:               id,
-		team:             team,
+		team:             reflect.ValueOf(v).Elem().Type().String(),
 		init:             defaultInit,
 		train:            defaultTrain,
 		evaluate:         defaultEvaluate,
