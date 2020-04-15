@@ -1,18 +1,18 @@
-package databaseoverseer
+package dboverseer
 
-import (
-	"reflect"
+import "github.com/herb-go/worker"
 
-	"github.com/herb-go/herb/model/sql/db"
+//Config overseer config struct
+type Config struct {
+}
 
-	"github.com/herb-go/worker"
-)
+//Apply apply config to overseer
+func (c *Config) Apply(o *worker.PlainOverseer) error {
+	o.WithIntroduction("Database workers")
+	return nil
+}
 
-//Team overseer team
-var Team = reflect.ValueOf(db.New()).Type().String()
-
-//New create new overseer.
-func New() *worker.PlainOverseer {
-	return worker.NewOrverseer("db", Team).
-		WithIntroduction("db workers")
+//New create new config
+func New() *Config {
+	return &Config{}
 }

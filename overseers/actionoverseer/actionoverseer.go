@@ -1,17 +1,18 @@
 package actionoverseer
 
-import (
-	"reflect"
+import "github.com/herb-go/worker"
 
-	"github.com/herb-go/herb/middleware/action"
-	"github.com/herb-go/worker"
-)
+//Config overseer config struct
+type Config struct {
+}
 
-//Team overseer team
-var Team = reflect.ValueOf(action.New()).Type().String()
+//Apply apply config to overseer
+func (c *Config) Apply(o *worker.PlainOverseer) error {
+	o.WithIntroduction("HTTP Action workers")
+	return nil
+}
 
-//New create new overseer.
-func New() *worker.PlainOverseer {
-	return worker.NewOrverseer("action", Team).
-		WithIntroduction("http action workers")
+//New create new config
+func New() *Config {
+	return &Config{}
 }

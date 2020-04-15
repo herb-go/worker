@@ -1,17 +1,18 @@
 package memberoverseer
 
-import (
-	"reflect"
+import "github.com/herb-go/worker"
 
-	"github.com/herb-go/member"
-	"github.com/herb-go/worker"
-)
+//Config overseer config struct
+type Config struct {
+}
 
-//Team overseer team
-var Team = reflect.ValueOf(member.New()).Type().String()
+//Apply apply config to overseer
+func (c *Config) Apply(o *worker.PlainOverseer) error {
+	o.WithIntroduction("Member workers")
+	return nil
+}
 
-//New create new overseer.
-func New() *worker.PlainOverseer {
-	return worker.NewOrverseer("member", Team).
-		WithIntroduction("member workers")
+//New create new config
+func New() *Config {
+	return &Config{}
 }
