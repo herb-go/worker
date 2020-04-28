@@ -1,4 +1,4 @@
-package config
+package worker
 
 type OverseerConfig struct {
 	ID string

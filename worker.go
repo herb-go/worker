@@ -29,6 +29,8 @@ func New() *Worker {
 var workers = map[string][]*Worker{}
 var overseers = map[string]Overseer{}
 
+var training = map[string]func(v interface{}) error{}
+
 //Hire register interface as worker with given name.
 //Return workder registered.
 func Hire(name string, v interface{}) *Worker {
