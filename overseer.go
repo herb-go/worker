@@ -26,10 +26,10 @@ type Overseer interface {
 	//ID overseer id.
 	ID() string
 	//Init init overseer
-	Init() error
+	Init(func(v interface{}) error) error
 }
 
-func defaultInit() error {
+func defaultInit(func(v interface{}) error) error {
 	return nil
 }
 func defaultTrain(workers []*Worker) error {
@@ -53,7 +53,7 @@ type PlainOverseer struct {
 	team             string
 	introduction     string
 	muted            bool
-	init             func() error
+	init             func(func(v interface{}) error) error
 	train            func(workers []*Worker) error
 	evaluate         func(*Worker) (interface{}, error)
 	evaluationReport func(*Worker) (string, error)
@@ -95,13 +95,13 @@ func (o *PlainOverseer) WithMuted(muted bool) *PlainOverseer {
 }
 
 //Init init overseer
-func (o *PlainOverseer) Init() error {
-	return o.init()
+func (o *PlainOverseer) Init(loader func(v interface{}) error) error {
+	return o.init(loader)
 }
 
 //WithInitFunc set overseer init func.
 //return overseer self.
-func (o *PlainOverseer) WithInitFunc(f func() error) *PlainOverseer {
+func (o *PlainOverseer) WithInitFunc(f func(func(v interface{}) error) error) *PlainOverseer {
 	o.init = f
 	return o
 }

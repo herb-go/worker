@@ -29,8 +29,6 @@ func New() *Worker {
 var workers = map[string][]*Worker{}
 var overseers = map[string]Overseer{}
 
-var training = map[string]func(v interface{}) error{}
-
 //Hire register interface as worker with given name.
 //Return workder registered.
 func Hire(name string, v interface{}) *Worker {
@@ -65,7 +63,7 @@ func TrainWorkers() error {
 //InitOverseers init overseers
 func InitOverseers() error {
 	for k := range overseers {
-		err := overseers[k].Init()
+		err := overseers[k].Init(overseerLoaders[overseers[k].ID()])
 		if err != nil {
 			return err
 		}
@@ -90,4 +88,21 @@ func FindWorker(team string, name string) *Worker {
 func reset() {
 	workers = map[string][]*Worker{}
 	overseers = map[string]Overseer{}
+}
+
+var workerLoaders = map[string]func(v interface{}) error{}
+var overseerLoaders = map[string]func(v interface{}) error{}
+
+//LoadWorkerConfig load worker config by given worker id.
+func LoadWorkerConfig(workerid string, v interface{}) error {
+	if workerid == "" || workerLoaders[workerid] == nil {
+		return nil
+	}
+	return workerLoaders[workerid](v)
+}
+
+//ResetLoaders reset worker loaders and oversser loaders
+func ResetLoaders() {
+	workerLoaders = map[string]func(v interface{}) error{}
+	overseerLoaders = map[string]func(v interface{}) error{}
 }
