@@ -1,4 +1,4 @@
-package cacheableoverseer
+package cacheproxyoverseer
 
 import "github.com/herb-go/worker"
 
@@ -8,7 +8,7 @@ type Config struct {
 
 //Apply apply config to overseer
 func (c *Config) Apply(o *worker.PlainOverseer) error {
-	o.WithIntroduction("Cacheable workers")
+	o.WithIntroduction("Cacheproxy workers")
 	return nil
 }
 
