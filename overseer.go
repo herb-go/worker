@@ -1,9 +1,5 @@
 package worker
 
-import (
-	"reflect"
-)
-
 //Overseer overseet interface
 type Overseer interface {
 	//Team overseer team
@@ -22,14 +18,14 @@ type Overseer interface {
 	EvaluationReport(*Worker) (string, error)
 	//Command exec command on given workder.
 	//Return data and any error if raised.
-	Command(*Worker, string) (interface{}, error)
+	Command(*Worker, []byte) (interface{}, error)
 	//ID overseer id.
 	ID() string
 	//Init init overseer
-	Init(func(v interface{}) error) error
+	Init(*OverseerTranning) error
 }
 
-func defaultInit(func(v interface{}) error) error {
+func defaultInit(*OverseerTranning) error {
 	return nil
 }
 func defaultTrain(workers []*Worker) error {
@@ -43,7 +39,7 @@ func defaultEvaluate(*Worker) (interface{}, error) {
 func defaultevaluationReport(*Worker) (string, error) {
 	return "", nil
 }
-func defaultCommand(*Worker, string) (interface{}, error) {
+func defaultCommand(*Worker, []byte) (interface{}, error) {
 	return nil, ErrUnknownCommand
 }
 
@@ -53,11 +49,11 @@ type PlainOverseer struct {
 	team             string
 	introduction     string
 	muted            bool
-	init             func(func(v interface{}) error) error
+	init             func(*OverseerTranning) error
 	train            func(workers []*Worker) error
 	evaluate         func(*Worker) (interface{}, error)
 	evaluationReport func(*Worker) (string, error)
-	command          func(*Worker, string) (interface{}, error)
+	command          func(*Worker, []byte) (interface{}, error)
 }
 
 //ID overseer id.
@@ -95,13 +91,13 @@ func (o *PlainOverseer) WithMuted(muted bool) *PlainOverseer {
 }
 
 //Init init overseer
-func (o *PlainOverseer) Init(loader func(v interface{}) error) error {
-	return o.init(loader)
+func (o *PlainOverseer) Init(tranning *OverseerTranning) error {
+	return o.init(tranning)
 }
 
 //WithInitFunc set overseer init func.
 //return overseer self.
-func (o *PlainOverseer) WithInitFunc(f func(func(v interface{}) error) error) *PlainOverseer {
+func (o *PlainOverseer) WithInitFunc(f func(*OverseerTranning) error) *PlainOverseer {
 	o.init = f
 	return o
 }
@@ -146,13 +142,13 @@ func (o *PlainOverseer) WithEvaluationReportFunc(f func(worker *Worker) (string,
 
 //Command exec command on given workder.
 //Return data and any error if raised.
-func (o *PlainOverseer) Command(worker *Worker, cmd string) (interface{}, error) {
+func (o *PlainOverseer) Command(worker *Worker, cmd []byte) (interface{}, error) {
 	return o.command(worker, cmd)
 }
 
 //WithCommandFunc set overseer command function.
 //Return overseer self
-func (o *PlainOverseer) WithCommandFunc(f func(worker *Worker, cmd string) (interface{}, error)) *PlainOverseer {
+func (o *PlainOverseer) WithCommandFunc(f func(worker *Worker, cmd []byte) (interface{}, error)) *PlainOverseer {
 	o.command = f
 	return o
 }
@@ -161,7 +157,7 @@ func (o *PlainOverseer) WithCommandFunc(f func(worker *Worker, cmd string) (inte
 func NewOrverseer(id string, v interface{}) *PlainOverseer {
 	return &PlainOverseer{
 		id:               id,
-		team:             reflect.ValueOf(v).Elem().Type().String(),
+		team:             GetWorkerTeam(v),
 		init:             defaultInit,
 		train:            defaultTrain,
 		evaluate:         defaultEvaluate,

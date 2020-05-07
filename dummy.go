@@ -1,14 +1,13 @@
 package worker
 
-import (
-	"reflect"
-)
-
+//Dummy dummy struct
 type Dummy struct {
 }
 
-var DummyTeam = reflect.ValueOf(NewDummyWorker()).Type().String()
+//DummyTeam dummy team
+var DummyTeam = GetWorkerTeam(NewDummyWorker())
 
+//NewDummyWorker create new dummy worker
 func NewDummyWorker() *Dummy {
 	return &Dummy{}
 }

@@ -1,29 +1,34 @@
 package worker
 
-type OverseerConfig struct {
-	ID       string
-	Tranning func(v interface{}) error
+//OverseerTranning overseer config struct
+type OverseerTranning struct {
+	ID           string
+	TranningPlan func(v interface{}) error `config:", lazyload"`
 }
 
-type WorkerConfig struct {
-	ID       string
-	Tranning func(v interface{}) error
+//Tranning worker config struct
+type Tranning struct {
+	ID           string
+	TranningPlan func(v interface{}) error `config:", lazyload"`
 }
 
+//Config config struct
 type Config struct {
-	Overseers []*OverseerConfig
-	Workers   []*WorkerConfig
+	Overseers []*OverseerTranning
+	Workers   []*Tranning
 }
 
+//Apply apply config
+//Return any error if raised.
 func (c *Config) Apply() error {
 	for _, v := range c.Overseers {
 		if v.ID != "" {
-			overseerLoaders[v.ID] = v.Tranning
+			overseerTrannings[v.ID] = v
 		}
 	}
 	for _, v := range c.Workers {
 		if v.ID != "" {
-			workerLoaders[v.ID] = v.Tranning
+			trannings[v.ID] = v
 		}
 	}
 	return nil

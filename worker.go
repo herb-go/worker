@@ -9,6 +9,14 @@ type Worker struct {
 	Interface    interface{}
 }
 
+//GetWorkerTeam get team of given worker
+func GetWorkerTeam(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	return reflect.ValueOf(v).Type().String()
+}
+
 //WithIntroduction set workder introduction.
 //Return workder self.
 func (u *Worker) WithIntroduction(c string) *Worker {
@@ -32,7 +40,7 @@ var overseers = map[string]Overseer{}
 //Hire register interface as worker with given name.
 //Return workder registered.
 func Hire(name string, v interface{}) *Worker {
-	ct := reflect.ValueOf(v).Elem().Type().String()
+	ct := GetWorkerTeam(v)
 	if workers[ct] == nil {
 		workers[ct] = []*Worker{}
 	}
@@ -63,7 +71,7 @@ func TrainWorkers() error {
 //InitOverseers init overseers
 func InitOverseers() error {
 	for k := range overseers {
-		err := overseers[k].Init(overseerLoaders[overseers[k].ID()])
+		err := overseers[k].Init(overseerTrannings[overseers[k].ID()])
 		if err != nil {
 			return err
 		}
@@ -85,24 +93,26 @@ func FindWorker(team string, name string) *Worker {
 	return nil
 }
 
-func reset() {
+//Reset reset workers and overseers
+func Reset() {
 	workers = map[string][]*Worker{}
 	overseers = map[string]Overseer{}
+	ResetTranning()
 }
 
-var workerLoaders = map[string]func(v interface{}) error{}
-var overseerLoaders = map[string]func(v interface{}) error{}
+var trannings = map[string]*Tranning{}
+var overseerTrannings = map[string]*OverseerTranning{}
 
-//LoadWorkerConfig load worker config by given worker id.
-func LoadWorkerConfig(workerid string, v interface{}) error {
-	if workerid == "" || workerLoaders[workerid] == nil {
+//GetTranning get worker tranning by given worker id.
+func GetTranning(workerid string) *Tranning {
+	if workerid == "" || trannings[workerid] == nil {
 		return nil
 	}
-	return workerLoaders[workerid](v)
+	return trannings[workerid]
 }
 
-//ResetLoaders reset worker loaders and oversser loaders
-func ResetLoaders() {
-	workerLoaders = map[string]func(v interface{}) error{}
-	overseerLoaders = map[string]func(v interface{}) error{}
+//ResetTranning reset worker trannings and overseer trannings
+func ResetTranning() {
+	trannings = map[string]*Tranning{}
+	overseerTrannings = map[string]*OverseerTranning{}
 }
