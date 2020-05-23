@@ -60,7 +60,7 @@ func Appoint(t Overseer) Overseer {
 //TrainWorkers init workders by registered overseers.
 func TrainWorkers() error {
 	for k := range overseers {
-		err := overseers[k].Train(workers[overseers[k].ID()])
+		err := overseers[k].Train(workers[overseers[k].Team()])
 		if err != nil {
 			return err
 		}
