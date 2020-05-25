@@ -92,7 +92,7 @@ func (c *Context) CheckPackage(pkg *types.Package) {
 	if err != nil {
 		panic(err)
 	}
-	if !strings.HasPrefix(p.Dir, c.Root) {
+	if !strings.HasPrefix(p.Dir+"/", c.Root) {
 		return
 	}
 	tp := NewPackage()
