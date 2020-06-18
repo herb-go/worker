@@ -41,15 +41,16 @@ func NewPackage() *Package {
 }
 
 type Context struct {
-	Ignored    map[string]bool
-	Writer     io.Writer
-	Overseers  map[string]string
-	WorkerSuff string
-	Root       string
-	Checked    map[string]bool
-	Result     []*Package
-	Filename   string
-	FileMode   os.FileMode
+	Ignored       map[string]bool
+	Writer        io.Writer
+	Overseers     map[string]string
+	OverseersPath string
+	WorkerSuff    string
+	Root          string
+	Checked       map[string]bool
+	Result        []*Package
+	Filename      string
+	FileMode      os.FileMode
 }
 
 func (c *Context) Printf(format string, v ...interface{}) {
@@ -100,17 +101,19 @@ func (c *Context) CheckPackage(pkg *types.Package) {
 	tp.ImportPath = path
 	tp.Path = p.Dir
 	tp.ID = strings.TrimPrefix(p.Dir, c.Root)
-	for _, v := range pkg.Scope().Names() {
-		obj := pkg.Scope().Lookup(v)
-		if !obj.Exported() {
-			continue
+	if path != c.OverseersPath {
+		for _, v := range pkg.Scope().Names() {
+			obj := pkg.Scope().Lookup(v)
+			if !obj.Exported() {
+				continue
+			}
+			t := obj.Type().String()
+			if c.Overseers[t] == "" {
+				continue
+			}
+			tp.AddWorker(v)
+			c.Printf("Worker \"%s\" (%s) in %s found.\n", v, t, tp.ID)
 		}
-		t := obj.Type().String()
-		if c.Overseers[t] == "" {
-			continue
-		}
-		tp.AddWorker(v)
-		c.Printf("Worker \"%s\" (%s) in %s found.\n", v, t, tp.ID)
 	}
 	if !tp.IsEmpty() {
 		c.Result = append(c.Result, tp)
@@ -124,7 +127,8 @@ func (c *Context) MustLoadOverseers(path string) {
 	if err != nil {
 		panic(err)
 	}
-	c.Checked[p.ImportPath] = true
+	c.OverseersPath = p.ImportPath
+	// c.Checked[p.ImportPath] = true
 	fset := token.NewFileSet()
 	f, err := parser.ParseDir(fset, p.Dir, nil, 0)
 	if err != nil {
