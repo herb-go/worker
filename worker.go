@@ -1,6 +1,10 @@
 package worker
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+	"time"
+)
 
 //Debug debug mode
 var Debug bool
@@ -9,6 +13,7 @@ var Debug bool
 type Worker struct {
 	Name         string
 	introduction string
+	Team         string
 	Interface    interface{}
 }
 
@@ -47,6 +52,7 @@ func Hire(name string, v interface{}) *Worker {
 	c := New()
 	c.Name = name
 	c.Interface = v
+	c.Team = GetWorkerTeam(v)
 	allworkers[name] = c
 	return c
 }
@@ -70,19 +76,48 @@ func TrainWorkers() error {
 
 func groupWorkersByTeam() {
 	for _, v := range allworkers {
-		t := GetWorkerTeam(v)
-		workersByTeam[t] = append(workersByTeam[t], v)
+		workersByTeam[v.Team] = append(workersByTeam[v.Team], v)
+		if Debug {
+			fmt.Printf("Worker %s <%s> hired.\n", v.Name, removeStarFromTeam(v.Team))
+			if v.introduction != "" {
+				fmt.Printf("  Introduction :%s\n", v.introduction)
+			}
+		}
 	}
+}
+func removeStarFromTeam(team string) string {
+	if team[0] == '*' {
+		return team[1:]
+	}
+	return team
 }
 
 //InitOverseers init overseers
 func InitOverseers() error {
+	if Debug {
+		time.Sleep(time.Millisecond)
+		fmt.Println("Hiring workers and overseers.")
+		fmt.Println("-----------------------------")
+		fmt.Println()
+	}
 	groupWorkersByTeam()
 	for k := range overseers {
 		err := overseers[k].Init(overseerTrannings[overseers[k].ID()])
 		if err != nil {
 			return err
 		}
+		if Debug {
+			fmt.Printf("Overseer %s appointed to worker team <%s>.\n", overseers[k].ID(), removeStarFromTeam(overseers[k].Team()))
+			intro := overseers[k].Introduction()
+			if intro != "" {
+				fmt.Printf("  Introduction :%s\n", intro)
+			}
+		}
+	}
+	if Debug {
+		fmt.Println()
+		fmt.Println("-----------------------------")
+		fmt.Println("All workers and overseers hired.")
 	}
 	return nil
 }
