@@ -2,6 +2,9 @@ package worker
 
 import "reflect"
 
+//Debug debug mode
+var Debug bool
+
 //Worker worker strut
 type Worker struct {
 	Name         string
@@ -34,20 +37,17 @@ func New() *Worker {
 	return &Worker{}
 }
 
-var workers = map[string][]*Worker{}
+var allworkers = map[string]*Worker{}
+var workersByTeam = map[string][]*Worker{}
 var overseers = map[string]Overseer{}
 
 //Hire register interface as worker with given name.
 //Return workder registered.
 func Hire(name string, v interface{}) *Worker {
-	ct := GetWorkerTeam(v)
-	if workers[ct] == nil {
-		workers[ct] = []*Worker{}
-	}
 	c := New()
 	c.Name = name
 	c.Interface = v
-	workers[ct] = append(workers[ct], c)
+	allworkers[name] = c
 	return c
 }
 
@@ -60,7 +60,7 @@ func Appoint(t Overseer) Overseer {
 //TrainWorkers init workders by registered overseers.
 func TrainWorkers() error {
 	for k := range overseers {
-		err := overseers[k].Train(workers[overseers[k].Team()])
+		err := overseers[k].Train(workersByTeam[overseers[k].Team()])
 		if err != nil {
 			return err
 		}
@@ -68,8 +68,16 @@ func TrainWorkers() error {
 	return nil
 }
 
+func groupWorkersByTeam() {
+	for _, v := range allworkers {
+		t := GetWorkerTeam(v)
+		workersByTeam[t] = append(workersByTeam[t], v)
+	}
+}
+
 //InitOverseers init overseers
 func InitOverseers() error {
+	groupWorkersByTeam()
 	for k := range overseers {
 		err := overseers[k].Init(overseerTrannings[overseers[k].ID()])
 		if err != nil {
@@ -79,9 +87,9 @@ func InitOverseers() error {
 	return nil
 }
 
-//FindWorker find worker by given type and name.
-func FindWorker(team string, name string) *Worker {
-	t := workers[team]
+//FindWorkerInTeam find worker by given type and name.
+func FindWorkerInTeam(team string, name string) *Worker {
+	t := workersByTeam[team]
 	if t == nil {
 		return nil
 	}
@@ -92,10 +100,14 @@ func FindWorker(team string, name string) *Worker {
 	}
 	return nil
 }
+func FindWorker(name string) *Worker {
+	return allworkers[name]
+}
 
 //Reset reset workers and overseers
 func Reset() {
-	workers = map[string][]*Worker{}
+	workersByTeam = map[string][]*Worker{}
+	allworkers = map[string]*Worker{}
 	overseers = map[string]Overseer{}
 	ResetTranning()
 }
