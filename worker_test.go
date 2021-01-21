@@ -24,16 +24,12 @@ func TestWorker(t *testing.T) {
 	if w.Name != "testname" || w.Introduction() != "test intro" {
 		t.Fatal(w)
 	}
-	worker := FindWorker("notexist", "testname")
-	if worker != nil {
-		t.Fatal(worker)
-	}
-	worker = FindWorker(testingWorkerTeam, "notexist")
-	if worker != nil {
-		t.Fatal(worker)
-	}
-	worker = FindWorker(testingWorkerTeam, "testname")
+	worker := FindWorker("testname")
 	if worker == nil {
+		t.Fatal(worker)
+	}
+	worker = FindWorker("notexist")
+	if worker != nil {
 		t.Fatal(worker)
 	}
 	team := GetWorkerTeam(nil)
