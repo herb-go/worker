@@ -3,6 +3,7 @@ package worker
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 )
 
@@ -45,6 +46,24 @@ func New() *Worker {
 var allworkers = map[string]*Worker{}
 var workersByTeam = map[string][]*Worker{}
 var overseers = map[string]Overseer{}
+
+var defered = []func(){}
+var deferlocker = sync.Mutex{}
+
+func Defer(f func()) {
+	deferlocker.Lock()
+	defer deferlocker.Unlock()
+	defered = append(defered, f)
+}
+
+func ExecDefered() {
+	deferlocker.Lock()
+	defer deferlocker.Unlock()
+	for _, v := range defered {
+		callback := v
+		go callback()
+	}
+}
 
 //Hire register interface as worker with given name.
 //Return workder registered.
