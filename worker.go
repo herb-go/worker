@@ -3,6 +3,7 @@ package worker
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 )
@@ -46,22 +47,38 @@ func New() *Worker {
 var allworkers = map[string]*Worker{}
 var workersByTeam = map[string][]*Worker{}
 var overseers = map[string]Overseer{}
+var outsourced = []*Outsourced{}
 
-var defered = []func(){}
-var deferlocker = sync.Mutex{}
+var onStop = []func(){}
+var onStart = []func(){}
+var locker = sync.Mutex{}
 
-func Defer(f func()) {
-	deferlocker.Lock()
-	defer deferlocker.Unlock()
-	defered = append(defered, f)
+func OnStop(f func()) {
+	locker.Lock()
+	defer locker.Unlock()
+	onStop = append(onStop, f)
 }
 
-func ExecDefered() {
-	deferlocker.Lock()
-	defer deferlocker.Unlock()
-	for _, v := range defered {
-		callback := v
-		go callback()
+func Stop() {
+	locker.Lock()
+	defer locker.Unlock()
+	defer func() { onStop = []func(){} }()
+	for _, v := range onStop {
+		v()
+	}
+}
+func OnStart(f func()) {
+	locker.Lock()
+	defer locker.Unlock()
+	onStart = append(onStart, f)
+}
+
+func Start() {
+	locker.Lock()
+	defer locker.Unlock()
+	defer func() { onStart = []func(){} }()
+	for _, v := range onStart {
+		v()
 	}
 }
 
@@ -110,6 +127,9 @@ func removeStarFromTeam(team string) string {
 	}
 	return team
 }
+func addStarToTeam(team string) string {
+	return "*" + team
+}
 
 //InitOverseers init overseers
 func InitOverseers() error {
@@ -119,7 +139,6 @@ func InitOverseers() error {
 		fmt.Println("-----------------------------")
 		fmt.Println()
 	}
-	groupWorkersByTeam()
 	for k := range overseers {
 		err := overseers[k].Init(overseerTrannings[overseers[k].ID()])
 		if err != nil {
@@ -133,6 +152,24 @@ func InitOverseers() error {
 			}
 		}
 	}
+	for _, v := range outsourced {
+		if !strings.HasPrefix(v.Name, OutsourcedPrefix) {
+			return fmt.Errorf("worker: outsourced worker name '%s' not start with prefix '%s'", v.Name, OutsourcedPrefix)
+		}
+		o, ok := overseers[addStarToTeam(v.Team)]
+		if !ok {
+			return fmt.Errorf("worker: overseer [%s] not found.", v.Team)
+		}
+		err := o.Outsource(v)
+		if err != nil {
+			return err
+		}
+		if Debug {
+			fmt.Printf("Hiring outsourced worker %s <%s>.\n", v.Name, v.Team)
+		}
+	}
+	groupWorkersByTeam()
+
 	if Debug {
 		fmt.Println()
 		fmt.Println("-----------------------------")
@@ -163,6 +200,7 @@ func Reset() {
 	workersByTeam = map[string][]*Worker{}
 	allworkers = map[string]*Worker{}
 	overseers = map[string]Overseer{}
+	outsourced = []*Outsourced{}
 	ResetTranning()
 }
 

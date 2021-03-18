@@ -1,5 +1,9 @@
 package worker
 
+import (
+	"fmt"
+)
+
 //Overseer overseet interface
 type Overseer interface {
 	//Team overseer team
@@ -19,12 +23,17 @@ type Overseer interface {
 	//Command exec command on given workder.
 	//Return data and any error if raised.
 	Command(*Worker, []byte) (interface{}, error)
+	//Outsource create worker by outsourced config.
+	Outsource(*Outsourced) error
 	//ID overseer id.
 	ID() string
 	//Init init overseer
 	Init(*OverseerTranning) error
 }
 
+func defaultOutsource(o *Outsourced) error {
+	return fmt.Errorf("worker: outsourcing for [%s] not supported", o.Team)
+}
 func defaultInit(*OverseerTranning) error {
 	return nil
 }
@@ -49,6 +58,7 @@ type PlainOverseer struct {
 	team             string
 	introduction     string
 	muted            bool
+	outsource        func(o *Outsourced) error
 	init             func(*OverseerTranning) error
 	train            func(workers []*Worker) error
 	evaluate         func(*Worker) (interface{}, error)
@@ -153,6 +163,18 @@ func (o *PlainOverseer) WithCommandFunc(f func(worker *Worker, cmd []byte) (inte
 	return o
 }
 
+//Outsource create worker by outsourced config.
+func (o *PlainOverseer) Outsource(outsourced *Outsourced) error {
+	return o.outsource(outsourced)
+}
+
+//WithOutsourceFunc set overseer outsource function.
+//Return overseer self
+func (o *PlainOverseer) WithOutsourceFunc(f func(outsourced *Outsourced) error) *PlainOverseer {
+	o.outsource = f
+	return o
+}
+
 //NewOrverseer create new overseer with given id and team
 func NewOrverseer(id string, v interface{}) *PlainOverseer {
 	return &PlainOverseer{
@@ -163,5 +185,6 @@ func NewOrverseer(id string, v interface{}) *PlainOverseer {
 		evaluate:         defaultEvaluate,
 		evaluationReport: defaultevaluationReport,
 		command:          defaultCommand,
+		outsource:        defaultOutsource,
 	}
 }

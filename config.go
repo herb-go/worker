@@ -14,8 +14,9 @@ type Tranning struct {
 
 //Config config struct
 type Config struct {
-	Overseers []*OverseerTranning
-	Workers   []*Tranning
+	Overseers  []*OverseerTranning
+	Workers    []*Tranning
+	Outsourced []*Outsourced
 }
 
 //Apply apply config
@@ -26,6 +27,7 @@ func (c *Config) Apply() error {
 			overseerTrannings[v.ID] = v
 		}
 	}
+	outsourced = append(outsourced, c.Outsourced...)
 	for _, v := range c.Workers {
 		if v.ID != "" {
 			trannings[v.ID] = v
